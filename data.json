@@ -1,6 +1,6 @@
 {
   "admin": {
-    "passwordHash": "$2a$10$8K1p/a0dL1LXMIgoEDFrXO9hW0K84zO2n3SjK6h2h9b3G9h8N3y2O"
+    "passwordHash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f"
   },
   "settings": {
     "defaultTarget": 50.00
@@ -41,14 +41,14 @@
       "date": "2026-03-05"
     },
     {
-      "id": "st-3",
+      "id": "tx-3",
       "studentId": "st-2",
       "amount": 15.00,
       "description": "Getränkeverkauf",
       "date": "2026-03-02"
     },
     {
-      "id": "st-4",
+      "id": "tx-4",
       "studentId": "st-3",
       "amount": 30.00,
       "description": "Muffinsverkauf",

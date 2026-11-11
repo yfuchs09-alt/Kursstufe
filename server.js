@@ -34,7 +34,7 @@ function generateId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 }
 
-// Sessions im RAM (für 2 Jahre Betrieb okay, bei Skalierung → Redis)
+// Sessions im RAM
 const sessions = {};
 
 function parseCookies(req) {
@@ -96,7 +96,18 @@ const server = http.createServer(async (req, res) => {
 
       if (type === 'admin') {
         const { data: admin, error } = await supabase.from('admin_auth').select('password_hash').eq('id', 1).single();
-        if (!error && admin && hashPassword(password) === admin.password_hash) {
+
+        // DEBUG LOGGING
+        const computedHash = hashPassword(password);
+        console.log('🔐 ADMIN LOGIN DEBUG:');
+        console.log('   Input password:', JSON.stringify(password));
+        console.log('   Computed hash:', computedHash);
+        console.log('   DB hash:', admin?.password_hash);
+        console.log('   Match:', computedHash === admin?.password_hash);
+        console.log('   DB hash length:', admin?.password_hash?.length);
+        console.log('   Computed length:', computedHash.length);
+
+        if (!error && admin && computedHash === admin.password_hash) {
           const t = crypto.randomBytes(16).toString('hex');
           sessions[t] = { role: 'admin' };
           res.setHeader('Set-Cookie', `sessionToken=${t}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`);
@@ -193,7 +204,7 @@ const server = http.createServer(async (req, res) => {
       if (name) updates.name = name.trim();
       if (code) updates.code = code.trim().toUpperCase();
       if (target !== undefined && target !== '') updates.target = Number(target);
-      else if (target === '') updates.target = null; // Reset to default
+      else if (target === '') updates.target = null;
 
       const { error } = await supabase.from('students').update(updates).eq('id', id);
       if (error) return res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ success: false, error: error.message }));
@@ -202,7 +213,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname.startsWith('/api/admin/students/') && method === 'DELETE') {
       const id = pathname.split('/').pop();
-      const { error } = await supabase.from('students').delete().eq('id', id); // Cascade deletes transactions
+      const { error } = await supabase.from('students').delete().eq('id', id);
       if (error) return res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ success: false, error: error.message }));
       return res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ success: true }));
     }
@@ -241,7 +252,7 @@ const server = http.createServer(async (req, res) => {
       return res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ success: true }));
     }
 
-    // --- ADMIN: SETTINGS (Default Target & Admin Password) ---
+    // --- ADMIN: SETTINGS ---
     if (pathname === '/api/admin/settings' && method === 'PUT') {
       const { defaultTarget, newPassword } = data;
       if (defaultTarget !== undefined && defaultTarget !== '') {
@@ -281,7 +292,7 @@ const server = http.createServer(async (req, res) => {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': 'attachment; filename="kursstufenkasse_export.csv"'
       });
-      return res.end('﻿' + csv); // UTF-8 BOM for Excel
+      return res.end('' + csv);
     }
 
     return res.writeHead(404, { 'Content-Type': 'application/json' }).end(JSON.stringify({ success: false, error: 'API-Endpunkt nicht gefunden.' }));
@@ -290,7 +301,6 @@ const server = http.createServer(async (req, res) => {
   // ─── STATIC FILE SERVING ───
   let filePath = path.join(__dirname, 'public', pathname === '/' ? 'index.html' : pathname);
 
-  // Security: Prevent directory traversal
   if (!filePath.startsWith(path.join(__dirname, 'public'))) {
     return res.writeHead(403).end('Forbidden');
   }
@@ -304,7 +314,6 @@ const server = http.createServer(async (req, res) => {
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        // SPA Fallback: serve index.html for client-side routing
         fs.readFile(path.join(__dirname, 'public', 'index.html'), (e, c) => {
           if (e) return res.writeHead(500).end('Server Error');
           res.writeHead(200, { 'Content-Type': 'text/html' }).end(c);

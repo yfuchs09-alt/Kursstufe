@@ -1,0 +1,14 @@
+{
+  "name": "kursstufenkasse",
+  "version": "3.0.0",
+  "description": "Kursstufenkasse mit Supabase Persistenz - Produktionsreif",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  }
+}

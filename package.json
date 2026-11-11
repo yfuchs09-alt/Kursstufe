@@ -1,0 +1,10 @@
+{
+  "name": "kursstufenkasse",
+  "version": "1.0.0",
+  "description": "Kursstufenkasse Einnahmenverwaltung",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
